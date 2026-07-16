@@ -1,15 +1,103 @@
 import { Composer } from "grammy";
+import type { Ctx } from "../bot.js";
+import {
+  registerMainMenuItem,
+  inlineButton,
+  inlineKeyboard,
+} from "../toolkit/index.js";
+import { getOrder, getLatestOrderByUser, getPaymentByOrder } from "../storage.js";
 
-// SCAFFOLD — generated from the bot blueprint BEFORE the agent runs.
-// Keep a LIVE registration (.command / .callbackQuery / …) so this feature is
-// never an empty stub. Replace the reply body with real logic + copy; if you
-// change the user-facing text, update tests/specs to match EXACTLY.
-// Do NOT rewrite src/bot.ts — buildBot() already auto-loads this module.
+registerMainMenuItem({ label: "📋 Order status", data: "status:show", order: 20 });
 
-const composer = new Composer();
+const composer = new Composer<Ctx>();
 
 composer.command("status", async (ctx) => {
-  await ctx.reply("Check payment/order status by ID (shows latest order if no ID provided)");
+  const userId = ctx.from?.id ?? 0;
+  const order = await getLatestOrderByUser(userId);
+
+  if (!order) {
+    await ctx.reply("No orders yet. Tap 🛒 New order to create one.", {
+      reply_markup: inlineKeyboard([[inlineButton("⬅️ Back to menu", "menu:main")]]),
+    });
+    return;
+  }
+
+  const payment = await getPaymentByOrder(order.orderId);
+  const paymentStatus = payment?.status === "success" ? "Paid" : payment?.status === "pending" ? "Pending" : "Not paid";
+  const orderStatus = order.status === "paid" ? "Processing" : order.status === "failed" ? "Failed" : "Awaiting payment";
+
+  await ctx.reply(
+    `Order ${order.orderId}\n\n` +
+      `Description: ${order.description}\n` +
+      `Budget: ₦${order.budget.toLocaleString()}\n` +
+      `Payment: ${paymentStatus}\n` +
+      `Status: ${orderStatus}`,
+    {
+      reply_markup: inlineKeyboard([
+        [inlineButton("⬅️ Back to menu", "menu:main")],
+      ]),
+    },
+  );
+});
+
+composer.callbackQuery("status:show", async (ctx) => {
+  await ctx.answerCallbackQuery();
+  const userId = ctx.from?.id ?? 0;
+  const order = await getLatestOrderByUser(userId);
+
+  if (!order) {
+    await ctx.editMessageText("No orders yet. Tap 🛒 New order to create one.", {
+      reply_markup: inlineKeyboard([[inlineButton("⬅️ Back to menu", "menu:main")]]),
+    });
+    return;
+  }
+
+  const payment = await getPaymentByOrder(order.orderId);
+  const paymentStatus = payment?.status === "success" ? "Paid" : payment?.status === "pending" ? "Pending" : "Not paid";
+  const orderStatus = order.status === "paid" ? "Processing" : order.status === "failed" ? "Failed" : "Awaiting payment";
+
+  await ctx.editMessageText(
+    `Order ${order.orderId}\n\n` +
+      `Description: ${order.description}\n` +
+      `Budget: ₦${order.budget.toLocaleString()}\n` +
+      `Payment: ${paymentStatus}\n` +
+      `Status: ${orderStatus}`,
+    {
+      reply_markup: inlineKeyboard([
+        [inlineButton("⬅️ Back to menu", "menu:main")],
+      ]),
+    },
+  );
+});
+
+composer.callbackQuery(/^status:check:(.+)$/, async (ctx) => {
+  await ctx.answerCallbackQuery();
+  const orderId = ctx.match[1];
+  const order = await getOrder(orderId);
+
+  if (!order) {
+    await ctx.editMessageText("Order not found. Check the order ID and try again.", {
+      reply_markup: inlineKeyboard([[inlineButton("⬅️ Back to menu", "menu:main")]]),
+    });
+    return;
+  }
+
+  const payment = await getPaymentByOrder(order.orderId);
+  const paymentStatus = payment?.status === "success" ? "Paid" : payment?.status === "pending" ? "Pending" : "Not paid";
+  const orderStatus = order.status === "paid" ? "Processing" : order.status === "failed" ? "Failed" : "Awaiting payment";
+
+  await ctx.editMessageText(
+    `Order ${order.orderId}\n\n` +
+      `Description: ${order.description}\n` +
+      `Budget: ₦${order.budget.toLocaleString()}\n` +
+      `Payment: ${paymentStatus}\n` +
+      `Status: ${orderStatus}`,
+    {
+      reply_markup: inlineKeyboard([
+        [inlineButton("⬅️ Back to menu", "menu:main")],
+      ]),
+    },
+  );
 });
 
 export default composer;

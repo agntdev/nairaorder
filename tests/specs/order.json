@@ -1,19 +1,47 @@
 [
   {
-    "name": "/order",
+    "name": "order flow - description, budget, confirm, pay",
     "steps": [
       {
-        "expect": [
-          {
-            "method": "sendMessage",
-            "payload": {
-              "text": "Initiate order creation flow with order description and budget collection"
-            }
-          }
-        ],
-        "send": {
-          "text": "/order"
-        }
+        "send": { "text": "/order" },
+        "expect": [{ "method": "sendMessage", "payload": { "text": "What do you need? Describe your order." } }]
+      },
+      {
+        "send": { "text": "Buy 10 laptops" },
+        "expect": [{ "method": "sendMessage", "payload": { "text": "Got it. What's your budget in NGN?" } }]
+      },
+      {
+        "send": { "text": "500000" },
+        "expect": [{ "method": "sendMessage", "payload": { "text": "Order summary\n\nDescription: Buy 10 laptops\nBudget: ₦500,000\nAdmin fee: ₦500\n\nConfirm to proceed to payment." } }]
+      },
+      {
+        "send": { "callback": "order:confirm:yes" },
+        "expect": [{ "method": "editMessageText" }]
+      },
+      {
+        "send": { "callback": "order:pay:ORD-0001" },
+        "expect": [{ "method": "editMessageText" }]
+      }
+    ]
+  },
+  {
+    "name": "order flow - user cancels at confirmation",
+    "steps": [
+      {
+        "send": { "text": "/order" },
+        "expect": [{ "method": "sendMessage", "payload": { "text": "What do you need? Describe your order." } }]
+      },
+      {
+        "send": { "text": "Something heavy" },
+        "expect": [{ "method": "sendMessage", "payload": { "text": "Got it. What's your budget in NGN?" } }]
+      },
+      {
+        "send": { "text": "10000" },
+        "expect": [{ "method": "sendMessage", "payload": { "text": "Order summary\n\nDescription: Something heavy\nBudget: ₦10,000\nAdmin fee: ₦500\n\nConfirm to proceed to payment." } }]
+      },
+      {
+        "send": { "callback": "order:confirm:no" },
+        "expect": [{ "method": "editMessageText", "payload": { "text": "Order cancelled. Tap /start to begin again." } }]
       }
     ]
   }

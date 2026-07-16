@@ -1,19 +1,42 @@
 [
   {
-    "name": "/status",
+    "name": "/status with no orders shows empty state",
+    "strict": true,
     "steps": [
       {
+        "send": { "text": "/status" },
         "expect": [
-          {
-            "method": "sendMessage",
-            "payload": {
-              "text": "Check payment/order status by ID (shows latest order if no ID provided)"
-            }
-          }
-        ],
-        "send": {
-          "text": "/status"
-        }
+          { "method": "sendMessage", "payload": { "text": "No orders yet. Tap \uD83D\uDED2 New order to create one." } }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/status shows latest order after creation and payment",
+    "steps": [
+      {
+        "send": { "text": "/order" },
+        "expect": [{ "method": "sendMessage", "payload": { "text": "What do you need? Describe your order." } }]
+      },
+      {
+        "send": { "text": "Buy widgets" },
+        "expect": [{ "method": "sendMessage", "payload": { "text": "Got it. What's your budget in NGN?" } }]
+      },
+      {
+        "send": { "text": "25000" },
+        "expect": [{ "method": "sendMessage", "payload": { "text": "Order summary\n\nDescription: Buy widgets\nBudget: \u20A625,000\nAdmin fee: \u20A6500\n\nConfirm to proceed to payment." } }]
+      },
+      {
+        "send": { "callback": "order:confirm:yes" },
+        "expect": [{ "method": "editMessageText" }]
+      },
+      {
+        "send": { "callback": "order:pay:ORD-0001" },
+        "expect": [{ "method": "editMessageText" }]
+      },
+      {
+        "send": { "text": "/status" },
+        "expect": [{ "method": "sendMessage", "payload": { "text": "Order ORD-0001\n\nDescription: Buy widgets\nBudget: \u20A625,000\nPayment: Paid\nStatus: Processing" } }]
       }
     ]
   }

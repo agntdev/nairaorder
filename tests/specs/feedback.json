@@ -1,19 +1,14 @@
 [
   {
-    "name": "/feedback",
+    "name": "/feedback submits feedback",
     "steps": [
       {
-        "expect": [
-          {
-            "method": "sendMessage",
-            "payload": {
-              "text": "Submit feedback about ordering experience"
-            }
-          }
-        ],
-        "send": {
-          "text": "/feedback"
-        }
+        "send": { "text": "/feedback" },
+        "expect": [{ "method": "sendMessage", "payload": { "text": "What's on your mind? Share your feedback." } }]
+      },
+      {
+        "send": { "text": "Great bot, love it!" },
+        "expect": [{ "method": "sendMessage", "payload": { "text": "Thanks — your feedback has been recorded." } }]
       }
     ]
   }

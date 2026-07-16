@@ -1,0 +1,20 @@
+[
+  {
+    "name": "/feedback",
+    "steps": [
+      {
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Submit feedback about ordering experience"
+            }
+          }
+        ],
+        "send": {
+          "text": "/feedback"
+        }
+      }
+    ]
+  }
+]

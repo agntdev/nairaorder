@@ -17,10 +17,17 @@ export interface SuiteResult {
 /**
  * Run many specs, each against a FRESH bot from `makeBot` (isolation — capture
  * state and the fake botInfo are per-bot). Returns the aggregate.
+ * `perSpecSetup` is called before each spec with its name, if provided — use it
+ * to reset shared module-level state (e.g. storage) between specs.
  */
-export async function runSpecs(makeBot: () => Bot<any> | Promise<Bot<any>>, specs: BotSpec[]): Promise<SuiteResult> {
+export async function runSpecs(
+  makeBot: () => Bot<any> | Promise<Bot<any>>,
+  specs: BotSpec[],
+  perSpecSetup?: (specName: string) => void | Promise<void>,
+): Promise<SuiteResult> {
   const results: SpecResult[] = [];
   for (const spec of specs) {
+    if (perSpecSetup) await perSpecSetup(spec.name);
     results.push(await runSpec(await makeBot(), spec));
   }
   const passed = results.filter((r) => r.ok).length;

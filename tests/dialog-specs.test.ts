@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { existsSync, readdirSync, readFileSync } from "fs";
 import { join } from "path";
 import { buildBot } from "../src/bot";
-import { resetStorage } from "../src/storage.js";
+import { resetStorage } from "../src/storage";
 import { formatSuiteResult, parseBotSpecs, runSpecs } from "../src/toolkit/harness/run-specs";
 
 // THE PUBLISH GATE replays every tests/specs/*.json against your built bot via the

@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { existsSync, readdirSync, readFileSync } from "fs";
 import { join } from "path";
 import { buildBot } from "../src/bot";
+import { resetStorage } from "../src/storage.js";
 import { formatSuiteResult, parseBotSpecs, runSpecs } from "../src/toolkit/harness/run-specs";
-import { resetStorage } from "../src/storage";
 
 // THE PUBLISH GATE replays every tests/specs/*.json against your built bot via the
 // toolkit harness, and fails the build on any mismatch. This test runs the SAME
@@ -23,15 +23,7 @@ describe("dialog specs (the publish gate replays these)", () => {
     const specs = files.flatMap((f) =>
       parseBotSpecs(JSON.parse(readFileSync(join(SPECS_DIR, f), "utf8"))),
     );
-    // Reset storage between each spec so module-level counters don't bleed across specs.
-    const { runSpec } = await import("../src/toolkit/harness/runner");
-    const results = [];
-    for (const spec of specs) {
-      resetStorage();
-      results.push(await runSpec(await buildBot("123456:TEST"), spec));
-    }
-    const passed = results.filter((r) => r.ok).length;
-    const suite = { total: results.length, passed, failed: results.length - passed, results };
+    const suite = await runSpecs(() => buildBot("123456:TEST"), specs, () => resetStorage());
     expect(suite.failed, "\n" + formatSuiteResult(suite)).toBe(0);
   });
 });
